@@ -1,0 +1,113 @@
+# =====================================================================
+# SkyGames competition rules & analysis parameters
+# ---------------------------------------------------------------------
+# Every tunable number the engine uses lives here. Change a value, bump
+# `rules_version`, and every stored score records which version it used.
+# Defaults reproduce the behaviour of skygames_analyzer_app v3.9 exactly
+# unless a comment says "NEW". Anything marked LEGACY-COMPAT is a value
+# you may want to change deliberately (see docs/AUDIT.md).
+# =====================================================================
+
+rules_version: "2026.1"
+
+# ---------------------------------------------------------------------
+# Altitude reference
+# ---------------------------------------------------------------------
+altitude_reference:
+  # MSL = use GPS hMSL directly (what v3.9 did).
+  # AGL = subtract ground elevation first. Use AGL for any drop zone that
+  #       is not near sea level, and always for the global online challenge.
+  mode: MSL                # LEGACY-COMPAT. MSL | AGL
+  ground_elevation_m: null # AGL only. null = auto-detect from the landing
+  auto_ground_last_s: 10   # AGL auto-detect: median altitude of the last N s
+
+# ---------------------------------------------------------------------
+# Data ingestion & quality (NEW - v3.9 did no quality filtering)
+# ---------------------------------------------------------------------
+data_quality:
+  max_h_acc_m: 20          # drop samples with hAcc above this (if column exists). null = off
+  max_v_acc_m: 30          # same for vAcc. null = off
+  min_num_sv: 5            # drop samples with fewer satellites (if column exists). null = off
+  max_accel_ms2: 80        # drop velocity spikes implying > ~8 g between samples. null = off
+  min_sample_rate_hz: 1.0  # reject files sampled slower than this
+  max_gap_in_window_s: 2.0 # flag a score as low-quality if a gap this long is inside the window
+  min_peak_alt_ft: 11000   # reject files that never reach this altitude (above reference)
+
+# ---------------------------------------------------------------------
+# Smoothing (rolling median, by time)
+# ---------------------------------------------------------------------
+smoothing:
+  exit_window_s: 0.5
+  opening_window_s: 0.6
+
+# ---------------------------------------------------------------------
+# Exit / opening detection
+# ---------------------------------------------------------------------
+detection:
+  exit:
+    freefall_threshold_kph: 100   # vertical speed (down) that counts as freefall
+    sustain_s: 0.6                # must stay above threshold this long
+    lookback_s: 6.0               # search window before the candidate exit
+    near_zero_kph: 5              # LEGACY-COMPAT: v3.9 used 5 km/h (code) although its comment said 5 m/s
+    near_zero_min_s: 0.3          # near-zero run must last this long
+    ramp_window_s: 0.5            # ...or vertical accel over this window
+    ramp_min_ms2: 8.0             # ...must exceed this
+  opening:
+    min_alt_ft: 1500
+    max_alt_ft: 4500
+    threshold_kph: 100            # vertical speed falls below this = deployment
+    sustain_s: 1.5
+    sustain_tolerance: 1.05       # allowed overshoot while sustaining (x threshold)
+    prior_fast_lookback_s: 3.0    # must have been above threshold within this many s before
+
+# ---------------------------------------------------------------------
+# Scoring window (shared by all tasks)
+# ---------------------------------------------------------------------
+window:
+  top_ft: 11000      # window entry (point A); speed-course clock starts here
+  bottom_ft: 5000    # window exit (point B)
+
+# ---------------------------------------------------------------------
+# Tasks. Each task module reads only its own block.
+# ---------------------------------------------------------------------
+tasks:
+  max_horizontal_speed:
+    label: "Max Horizontal Speed"
+    unit: kph
+    rank: desc
+    averaging_s: 0      # LEGACY-COMPAT: 0 = best single GPS sample (spike-prone). Consider 3.
+  distance:
+    label: "Max Straight-Line Distance"
+    unit: m
+    rank: desc
+  speed_course:
+    label: "1 km Speed Course"
+    unit: s
+    rank: asc
+    target_distance_m: 1000
+    # How "1 km covered" is measured, starting at point A (window top):
+    #   ab_projection    - distance along the A->B direction (v3.9 behaviour)
+    #   radial_from_start - straight-line distance from A, any direction
+    measure: ab_projection   # LEGACY-COMPAT
+    must_finish_in_window: true
+
+# ---------------------------------------------------------------------
+# Upper-air wind (NEW). Raw GPS score is always stored; when enabled a
+# wind-adjusted ("air-relative") score is stored alongside it.
+# ---------------------------------------------------------------------
+wind:
+  enabled: false
+  provider: open_meteo      # open_meteo | manual
+  cache_path: data/wind_cache.sqlite
+  cache_grid_deg: 0.25      # lookups are snapped to this lat/lon grid (matches model resolution)
+  # Pressure levels to request (hPa). 1000-500 covers sea level to ~18,000 ft.
+  pressure_levels_hpa: [1000, 975, 950, 925, 900, 850, 800, 700, 600, 500]
+  timeout_s: 10
+
+# ---------------------------------------------------------------------
+# Visualization
+# ---------------------------------------------------------------------
+visualization:
+  png_dpi: 160
+  profile_glide_ylim: [0, 2]
+  kml_line_width: 4

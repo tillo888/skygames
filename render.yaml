@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: skygames
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/meta
+    envVars:
+      - key: SKYGAMES_ADMIN_PASSWORD
+        sync: false          # Render asks you for it on first deploy
+      - key: SKYGAMES_SECRET_KEY
+        generateValue: true
+      - key: SKYGAMES_HTTPS_ONLY
+        value: "1"
+    disk:
+      name: skygames-data
+      mountPath: /data
+      sizeGB: 1

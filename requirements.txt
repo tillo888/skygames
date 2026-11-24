@@ -1,0 +1,12 @@
+# engine
+numpy>=1.26,<3
+pandas>=2.1,<4
+matplotlib>=3.8,<4
+pyyaml>=6,<7
+pydantic>=2.5,<3
+# web app
+starlette>=0.37
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+# tests
+pytest>=8

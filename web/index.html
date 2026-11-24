@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyGames Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Crect width='22' height='22' rx='5' fill='%2313233b'/%3E%3Cpath d='M4 6 L18 11 L4 16' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M2 5 L20 12 L2 19" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M2 12 H14" stroke="#fff" stroke-width="2.2" stroke-dasharray="2 2.5"/></svg>
+    SkyGames <small>Freefall analyzer</small>
+  </div>
+  <nav class="nav" aria-label="Sections">
+    <button data-view="analyzer" aria-current="page">Analyzer</button>
+    <button data-view="heats">Saved heats</button>
+  </nav>
+  <div class="spacer"></div>
+  <span class="demo-badge" id="demo-badge" hidden>Preview with sample data</span>
+  <div class="account" id="account"></div>
+</header>
+
+<div class="layout" id="view-analyzer-layout">
+  <aside class="sidebar" aria-label="Heat setup">
+    <div class="sidebar-scroll">
+      <section class="side-section">
+        <h2>Heat <button class="link-btn aside" id="new-heat" type="button">New heat</button></h2>
+        <div class="field">
+          <label for="heat-name">Name</label>
+          <input type="text" id="heat-name" placeholder="Distance heat 1" autocomplete="off">
+        </div>
+        <div class="field">
+          <span class="label" id="task-label">Discipline</span>
+          <div class="segmented" id="task-picker" role="group" aria-labelledby="task-label"></div>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <h2>Flyers <span class="aside" id="files-count"></span></h2>
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="file-input" accept=".csv,.CSV,text/csv" multiple class="sr-only">
+          <strong>Add CSV files</strong><br>Drop them here or click to choose. One file per flyer.
+        </label>
+        <ul class="file-list" id="file-list"></ul>
+      </section>
+
+      <section class="side-section">
+        <h2>Rules <button class="link-btn aside" id="reset-rules" type="button">Reset to rulebook</button></h2>
+        <div id="rules-form"></div>
+      </section>
+    </div>
+    <div class="sidebar-foot">
+      <button class="btn primary" id="analyze-btn" type="button" disabled>Score heat</button>
+      <div class="status-line" id="status" role="status" aria-live="polite"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="view" id="view-analyzer">
+      <div class="empty" id="empty-state">
+        <svg width="120" height="64" viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M6 8 C 30 14, 60 30, 112 56" fill="none" stroke="#13233b" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M0 20 H120 M0 46 H120" stroke="#75839a" stroke-dasharray="3 4"/>
+          <text x="0" y="16" font-size="10" fill="#75839a" font-family="Barlow, sans-serif">11,000 ft</text>
+          <text x="0" y="60" font-size="10" fill="#75839a" font-family="Barlow, sans-serif">5,000 ft</text>
+        </svg>
+        <h1>Score a load</h1>
+        <p>Add each flyer's GPS file on the left, pick the discipline and press Score heat. You can change any rule afterwards and re-score without uploading again.</p>
+      </div>
+      <div id="results" hidden></div>
+    </section>
+    <section class="view" id="view-heats" hidden></section>
+  </main>
+</div>
+
+<dialog id="confirm">
+  <h2 id="confirm-title"></h2>
+  <p id="confirm-text"></p>
+  <div class="row"><button class="btn small" value="cancel" id="confirm-cancel">Cancel</button><button class="btn small danger" id="confirm-ok">Delete</button></div>
+</dialog>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

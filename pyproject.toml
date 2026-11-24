@@ -1,0 +1,15 @@
+[project]
+name = "skygames-engine"
+version = "4.0.0"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26,<3", "pandas>=2.1,<4", "matplotlib>=3.8,<4", "pyyaml>=6,<7", "pydantic>=2.5,<3"]
+
+[project.scripts]
+skygames = "skygames_engine.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["skygames_engine*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::UserWarning:.*skygames_analyzer_app_v3_9"]
