@@ -235,6 +235,59 @@ details.advanced summary { cursor: pointer; font-size: 13.5px; color: var(--ink-
 .account button { background: none; border: 1px solid rgba(255,255,255,.35); color: #fff; border-radius: var(--r-sm); padding: 5px 10px; cursor: pointer; }
 .nav .lock { margin-left: 6px; opacity: .7; }
 
+/* ---------- competitions ---------- */
+.comp-wrap { max-width: 980px; }
+.comp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.comp-head h1 { font-size: 28px; margin: 0; }
+.comp-sub { font-size: 17px; margin: 30px 0 10px; color: var(--ink-2); }
+.comp-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-md); }
+.comp-row + .comp-row { border-top: 1px solid var(--rule); }
+.comp-list > .comp-row.open, .comp-wrap > .comp-row.open { background: #fbfcfd; }
+.comp-wrap > .comp-row { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-md); margin-bottom: 14px; }
+.comp-main { display: grid; grid-template-columns: 132px minmax(0, 1fr) auto; gap: 22px; align-items: start; padding: 20px 22px; }
+.comp-date { display: grid; border-right: 1px solid var(--rule); padding-right: 18px; }
+.comp-date .days { font-size: 40px; font-weight: 600; line-height: 1; letter-spacing: -.01em; }
+.comp-date .month { color: var(--ink-2); font-size: 14px; margin-top: 4px; }
+.comp-info h2 { margin: 0 0 2px; font-size: 21px; }
+.comp-info .where { font-size: 15px; }
+.comp-info .disc { color: var(--ink-2); font-size: 14px; margin-top: 6px; }
+.comp-info .status { font-size: 13.5px; margin-top: 6px; color: #1c6b3a; font-weight: 500; }
+.comp-info .status-closed, .comp-info .status-full, .comp-info .status-past { color: var(--ink-3); }
+.comp-info .notes-text { margin: 8px 0 0; color: var(--ink-2); font-size: 14px; max-width: 60ch; }
+.comp-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.btn.primary-sm { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn.primary-sm:hover { background: #1d3354; }
+.comp-list.past .comp-date .days { color: var(--ink-2); }
+.comp-form { padding: 4px 22px 22px 176px; display: grid; gap: 14px; }
+.comp-wrap > .comp-row > .comp-form { padding: 20px 22px; }
+.comp-form h3 { margin: 0; font-size: 17px; }
+.comp-form p { margin: 0; color: var(--ink-2); }
+.comp-form.done .btn { justify-self: start; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; }
+.comp-form .field input, .comp-form textarea { width: 100%; height: 38px; padding: 0 10px; border: 1px solid var(--rule); border-radius: var(--r-sm); background: var(--surface); font-size: 16px; }
+.comp-form textarea { height: auto; padding: 8px 10px; font: inherit; }
+fieldset.field { border: 0; padding: 0; margin: 0; }
+fieldset.field legend { font-size: 13px; color: var(--ink-2); padding: 0; margin-bottom: 6px; }
+.checks { display: flex; gap: 8px 18px; flex-wrap: wrap; }
+.check { display: inline-flex; gap: 8px; align-items: center; font-size: 15px; cursor: pointer; min-height: 32px; }
+.comp-form .check input, .check input { width: 18px; height: 18px; padding: 0; flex: none; accent-color: var(--ink); }
+.check { white-space: nowrap; }
+.form-foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; }
+.regs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+table.regs { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.regs th { text-align: left; color: var(--ink-3); font-weight: 500; font-size: 12.5px; padding: 6px 10px; }
+table.regs td { padding: 8px 10px; border-top: 1px solid var(--rule-soft); }
+table.regs td.n { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) {
+  .comp-main { grid-template-columns: 1fr; gap: 10px; }
+  .comp-date { border-right: 0; padding-right: 0; display: flex; gap: 10px; align-items: baseline; }
+  .comp-date .days { font-size: 30px; }
+  .comp-actions { justify-content: flex-start; }
+  .comp-form { padding: 4px 18px 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
 dialog { border: 0; border-radius: var(--r-md); padding: 22px; max-width: 420px; box-shadow: 0 20px 50px rgba(19,35,59,.3); }
 dialog::backdrop { background: rgba(19,35,59,.4); }
 dialog h2 { margin: 0 0 8px; font-size: 18px; }
@@ -257,5 +310,15 @@ dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18
   .map { height: 380px; }
   .topbar { gap: 14px; padding: 0 14px; }
   .brand small { display: none; }
+}
+@media (max-width: 640px) {
+  .topbar { gap: 8px; padding: 0 10px; }
+  .brand { font-size: 0; gap: 0; }
+  .brand svg { width: 22px; }
+  .nav { overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+  .nav button { padding: 8px 9px; font-size: 14px; white-space: nowrap; flex: none; }
+  .topbar .spacer, .account > span > span:first-child { display: none; }
+  .account button { padding: 5px 8px; font-size: 13px; white-space: nowrap; }
+  body { overflow-x: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

@@ -14,6 +14,9 @@ function demoOnly() {
   return Promise.reject(new Error("This preview can't re-score. Run the SkyGames server to change rules or upload files."));
 }
 
+const post = (url, body, method = "POST") =>
+  fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(json);
+
 export const api = {
   me: () => DEMO() ? Promise.resolve({ admin: true, admin_enabled: true }) : fetch("api/me").then(json),
   login: (password) => fetch("api/login", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -35,5 +38,13 @@ export const api = {
     : fetch(`api/heats/${id}/analyze`, { method: "POST", headers: { "Content-Type": "application/json" },
                                          body: JSON.stringify(body) }).then(json),
   deleteHeat: (id) => DEMO() ? demoOnly() : fetch(`api/heats/${id}`, { method: "DELETE" }).then(json),
+  listCompetitions: () => DEMO() ? Promise.resolve({ competitions: DEMO().competitions || [] }) : fetch("api/competitions").then(json),
+  register: (cid, body) => DEMO() ? demoOnly() : post(`api/competitions/${cid}/registrations`, body),
+  createCompetition: (body) => post("api/competitions", body),
+  updateCompetition: (cid, body) => post(`api/competitions/${cid}`, body, "PUT"),
+  deleteCompetition: (cid) => fetch(`api/competitions/${cid}`, { method: "DELETE" }).then(json),
+  registrations: (cid) => fetch(`api/competitions/${cid}/registrations`).then(json),
+  registrationsCsvUrl: (cid) => `api/competitions/${cid}/registrations.csv`,
+  deleteRegistration: (rid) => fetch(`api/registrations/${rid}`, { method: "DELETE" }).then(json),
   downloadUrl: (id, kind) => DEMO() ? null : `api/heats/${id}/download/${kind}`,
 };

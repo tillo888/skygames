@@ -1,0 +1,22 @@
+# Events loaded into an empty database (first start, or after a free-plan wipe).
+# Edit events in the app (Competitions tab, signed in as admin); this file is only the starting list.
+# disciplines: any of distance, speed_course, max_horizontal_speed
+competitions:
+  - name: Skygames Boituva
+    location: Boituva, Brazil
+    start_date: 2026-12-01
+    end_date: 2026-12-03
+    disciplines: [distance, speed_course, max_horizontal_speed]
+    payment_url: ""
+    spots: null
+    registration_open: true
+    notes: ""
+  - name: Skygames Castellón
+    location: Castellón, Spain
+    start_date: 2027-08-06
+    end_date: 2027-08-12
+    disciplines: [distance, speed_course, max_horizontal_speed]
+    payment_url: ""
+    spots: null
+    registration_open: true
+    notes: ""

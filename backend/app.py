@@ -19,6 +19,7 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
 from . import auth, service
+from .competitions import Competitions, routes as competition_routes
 from .auth import admin_only, can_open, remember_heat
 from .service import BadRequest
 from .store import Store
@@ -29,6 +30,7 @@ MAX_FILE_MB = float(os.environ.get("SKYGAMES_MAX_FILE_MB", "25"))
 MAX_FILES = int(os.environ.get("SKYGAMES_MAX_FILES", "12"))
 
 store = Store(DB_PATH)
+competitions = Competitions(store._db, store._lock)
 
 
 def _err(status: int, message: str):
@@ -156,6 +158,7 @@ routes = [
     Route("/api/heats/{hid}", delete_heat, methods=["DELETE"]),
     Route("/api/heats/{hid}/analyze", reanalyze, methods=["POST"]),
     Route("/api/heats/{hid}/download/{kind}", download, methods=["GET"]),
+    *competition_routes(competitions),
     Mount("/", StaticFiles(directory=str(ROOT / "web"), html=True), name="web"),
 ]
 

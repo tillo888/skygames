@@ -5,6 +5,7 @@ import { initSetup, renderSetup } from "./setup.js";
 import { initRules, renderRules } from "./rules.js";
 import { renderResults, renderStale, onSelectionChange } from "./results.js";
 import { renderHeats, renderLocked } from "./heats.js";
+import { renderCompetitions } from "./competitions.js";
 import { toast, h } from "./dom.js";
 
 let me = { admin: false, admin_enabled: false };
@@ -14,8 +15,8 @@ function renderAccount() {
   const el = $("account");
   if (window.SKYGAMES_DEMO) { el.replaceChildren(); return; }
   el.replaceChildren(me.admin
-    ? h("span", {}, "Admin", " ", h("button", { type: "button", onclick: async () => { await api.logout(); await refreshMe(); showView("analyzer"); toast("Signed out"); } }, "Sign out"))
-    : me.admin_enabled ? h("button", { type: "button", onclick: () => showView("heats") }, "Admin sign in") : "");
+    ? h("span", {}, h("span", {}, "Admin "), h("button", { type: "button", onclick: async () => { await api.logout(); await refreshMe(); showView(state.view === "competitions" ? "competitions" : "analyzer"); toast("Signed out"); } }, "Sign out"))
+    : me.admin_enabled ? h("button", { type: "button", onclick: () => showView("heats") }, "Sign in") : "");
   document.querySelectorAll(".nav button").forEach((b) => {
     b.querySelector(".lock")?.remove();
     if (LOCKED[b.dataset.view] && !me.admin) b.append(h("span", { class: "lock", title: "Admins only",
@@ -92,6 +93,7 @@ function showView(v) {
   update({ view: v });
   $("view-analyzer").hidden = v !== "analyzer";
   $("view-heats").hidden = v !== "heats";
+  $("view-competitions").hidden = v !== "competitions";
   document.querySelector(".sidebar").hidden = v !== "analyzer";
   document.querySelector(".layout").style.gridTemplateColumns = v === "analyzer" ? "" : "1fr";
   document.querySelectorAll(".nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.view === v ? "page" : "false"));
@@ -101,6 +103,7 @@ function showView(v) {
     return;
   }
   if (v === "heats") renderHeats({ onOpen: openHeat });
+  if (v === "competitions") renderCompetitions({ admin: me.admin });
 }
 
 async function init() {
@@ -137,6 +140,7 @@ async function init() {
   } else {
     const id = new URLSearchParams(location.search).get("heat");
     if (id) openHeat(id);
+    else if (location.hash === "#competitions") showView("competitions");
   }
 }
 
