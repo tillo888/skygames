@@ -8,5 +8,6 @@ pydantic>=2.5,<3
 starlette>=0.37
 uvicorn[standard]>=0.29
 python-multipart>=0.0.9
+itsdangerous>=2.1
 # tests
 pytest>=8
