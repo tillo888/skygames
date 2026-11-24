@@ -1,8 +1,12 @@
+# Free plan: the Analyzer works for everyone, but saved heats are wiped when the
+# service restarts or sleeps (free services have no persistent disk).
+# To keep saved heats: in Render change the instance type to Starter ($7/mo),
+# then uncomment the disk block below and push.
 services:
   - type: web
     name: skygames
     runtime: docker
-    plan: starter
+    plan: free
     healthCheckPath: /api/meta
     envVars:
       - key: SKYGAMES_ADMIN_PASSWORD
@@ -11,7 +15,9 @@ services:
         generateValue: true
       - key: SKYGAMES_HTTPS_ONLY
         value: "1"
-    disk:
-      name: skygames-data
-      mountPath: /data
-      sizeGB: 1
+      - key: SKYGAMES_DB
+        value: /tmp/skygames_web.sqlite
+    # disk:
+    #   name: skygames-data
+    #   mountPath: /data
+    #   sizeGB: 1

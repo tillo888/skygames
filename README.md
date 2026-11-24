@@ -19,8 +19,9 @@ Open http://localhost:8000. Heats are stored in `data/skygames_web.sqlite`.
 The app is a single Python service, so any host that runs Docker or Python works.
 
 **Render (simplest):** push this folder to a GitHub repo → render.com → New →
-Blueprint → pick the repo. `render.yaml` creates the service plus a 1 GB disk
-for saved heats. Without the disk, saved heats are lost on every deploy.
+Blueprint → pick the repo. `render.yaml` starts on the **free plan**: it sleeps after
+15 idle minutes and saved heats are wiped on restart. To keep heats, switch to
+Starter ($7/mo) and uncomment the disk block in `render.yaml`.
 
 **Railway / Fly.io / any VPS:** use the `Dockerfile`. Mount a volume at
 `/data` (heats are saved there). The `PORT` variable is respected.
