@@ -45,6 +45,9 @@ CREATE TABLE IF NOT EXISTS registrations (
     id TEXT PRIMARY KEY,
     competition_id TEXT NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
+    email TEXT NOT NULL DEFAULT '',
+    phone TEXT NOT NULL DEFAULT '',
+    whatsapp TEXT NOT NULL DEFAULT '',
     total_jumps INTEGER NOT NULL,
     tracking_jumps INTEGER NOT NULL,
     license TEXT NOT NULL,
@@ -107,9 +110,30 @@ def clean_competition(body: dict) -> dict:
             "notes": _text(body.get("notes"), "Notes", 0, 2000)}
 
 
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$")
+
+
+def _phone(v, label, required=True):
+    s = re.sub(r"[\s().-]", "", str(v or ""))
+    if not s:
+        if required:
+            raise Invalid(f"{label} is required.")
+        return ""
+    if s.startswith("00"):
+        s = "+" + s[2:]
+    if not re.fullmatch(r"\+?\d{7,15}", s):
+        raise Invalid(f"{label} should be a number with country code, like +55 11 91234 5678.")
+    return s
+
+
 def clean_registration(body: dict, comp: dict) -> dict:
     """Checked in the order the form shows the fields."""
     name = _text(body.get("name"), "Name", 2, 80)
+    email = _text(body.get("email"), "Email", 3, 120).lower()
+    if not EMAIL_RE.match(email):
+        raise Invalid("Email doesn't look right. Check for typos.")
+    phone = _phone(body.get("phone"), "Phone")
+    whatsapp = _phone(body.get("whatsapp"), "WhatsApp", required=False) or phone
     total = _int(body.get("total_jumps"), "Total jumps", 0, 100_000)
     tracking = _int(body.get("tracking_jumps"), "Tracking jumps", 0, 100_000)
     if tracking > total:
@@ -118,13 +142,18 @@ def clean_registration(body: dict, comp: dict) -> dict:
     disc = [d for d in body.get("disciplines") or [] if d in comp["disciplines"]]
     if not disc:
         raise Invalid("Pick at least one discipline.")
-    return {"name": name, "total_jumps": total, "tracking_jumps": tracking, "license": lic, "disciplines": disc}
+    return {"name": name, "email": email, "phone": phone, "whatsapp": whatsapp, "total_jumps": total,
+            "tracking_jumps": tracking, "license": lic, "disciplines": disc}
 
 
 class Competitions:
     def __init__(self, db, lock: threading.Lock):
         self.db, self.lock = db, lock
         self.db.executescript(SCHEMA)
+        cols = {r[1] for r in self.db.execute("PRAGMA table_info(registrations)")}
+        for col in ("email", "phone", "whatsapp"):   # databases from before contact fields
+            if col not in cols:
+                self.db.execute(f"ALTER TABLE registrations ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
         if not self.db.execute("SELECT 1 FROM competitions LIMIT 1").fetchone() and SEED.exists():
             for c in (yaml.safe_load(SEED.read_text(encoding="utf-8")) or {}).get("competitions", []):
                 self.create(clean_competition(c))
@@ -167,9 +196,10 @@ class Competitions:
     def register(self, cid: str, reg: dict) -> str:
         rid = uuid.uuid4().hex[:10]
         with self.lock, self.db:
-            self.db.execute("INSERT INTO registrations (id, competition_id, name, total_jumps, tracking_jumps, license, "
-                            "disciplines, created_at) VALUES (?,?,?,?,?,?,?,?)",
-                            (rid, cid, reg["name"], reg["total_jumps"], reg["tracking_jumps"], reg["license"],
+            self.db.execute("INSERT INTO registrations (id, competition_id, name, email, phone, whatsapp, total_jumps, "
+                            "tracking_jumps, license, disciplines, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                            (rid, cid, reg["name"], reg["email"], reg["phone"], reg["whatsapp"], reg["total_jumps"],
+                             reg["tracking_jumps"], reg["license"],
                              json.dumps(reg["disciplines"]), _now()))
         return rid
 
@@ -297,11 +327,11 @@ def routes(comps: Competitions) -> List[Route]:
             return _err(404, "Competition not found.")
         buf = io.StringIO()
         w = csv.writer(buf)
-        w.writerow(["Name", "Total jumps", "Tracking jumps", "License country / federation", "Disciplines", "Registered (UTC)"])
+        w.writerow(["Name", "Email", "Phone", "WhatsApp", "Total jumps", "Tracking jumps", "License country / federation", "Disciplines", "Registered (UTC)"])
         for r in comps.registrations(c["id"]):
             # leading = + - @ would run as formulas in Excel
             safe = [("'" + v) if isinstance(v, str) and v[:1] in "=+-@" else v for v in
-                    (r["name"], r["total_jumps"], r["tracking_jumps"], r["license"], ", ".join(r["disciplines"]), r["created_at"])]
+                    (r["name"], r["email"], r["phone"], r["whatsapp"], r["total_jumps"], r["tracking_jumps"], r["license"], ", ".join(r["disciplines"]), r["created_at"])]
             w.writerow(safe)
         name = re.sub(r"[^A-Za-z0-9_-]+", "_", c["name"]).strip("_") or "competition"
         return Response("﻿" + buf.getvalue(), media_type="text/csv; charset=utf-8",

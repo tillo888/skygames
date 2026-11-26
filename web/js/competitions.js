@@ -79,6 +79,9 @@ function field(label, input, hint) {
 function registerForm(c, rerender) {
   const id = (n) => `reg-${c.id}-${n}`;
   const name = h("input", { type: "text", id: id("name"), autocomplete: "name", required: true, maxlength: 80 });
+  const email = h("input", { type: "email", id: id("email"), autocomplete: "email", required: true, maxlength: 120 });
+  const phone = h("input", { type: "tel", id: id("phone"), autocomplete: "tel", required: true, placeholder: "+55 11 91234 5678" });
+  const wa = h("input", { type: "tel", id: id("wa"), placeholder: "Same as phone" });
   const total = h("input", { type: "number", id: id("total"), min: 0, step: 1, inputmode: "numeric", required: true });
   const track = h("input", { type: "number", id: id("track"), min: 0, step: 1, inputmode: "numeric", required: true });
   const lic = h("input", { type: "text", id: id("lic"), required: true, maxlength: 80, placeholder: "e.g. USPA, RFAE Spain, CBPq Brazil" });
@@ -91,7 +94,7 @@ function registerForm(c, rerender) {
     const disciplines = boxes.map((b) => b.querySelector("input")).filter((i) => i.checked).map((i) => i.value);
     submit.disabled = true; msg.textContent = "Sending…"; msg.classList.remove("error");
     try {
-      const r = await api.register(c.id, { name: name.value, total_jumps: total.value, tracking_jumps: track.value,
+      const r = await api.register(c.id, { name: name.value, email: email.value, phone: phone.value, whatsapp: wa.value, total_jumps: total.value, tracking_jumps: track.value,
         license: lic.value, disciplines, website: trap.value });
       ctx.mode = "done";
       ctx.doneView = h("div", { class: "comp-form done" },
@@ -107,6 +110,9 @@ function registerForm(c, rerender) {
   } },
     h("div", { class: "form-grid" },
       field("Full name", name),
+      field("Email", email),
+      field("Phone", phone, "Include the country code."),
+      field("WhatsApp", wa, "Leave empty if it's the same as your phone."),
       field("Total jumps", total),
       field("Tracking jumps", track),
       field("License country or federation", lic)),
@@ -166,9 +172,14 @@ function regsPanel(c, rerender) {
       h("div", { class: "regs-head" }, h("h3", {}, `${regs.length} registration${regs.length === 1 ? "" : "s"}`),
         regs.length ? h("a", { class: "btn small", href: csv, download: "" }, "Download spreadsheet (CSV)") : null),
       regs.length ? h("div", { class: "table-scroll" }, h("table", { class: "regs" },
-        h("thead", {}, h("tr", {}, ["Name", "Total jumps", "Tracking jumps", "License / federation", "Disciplines", "Registered", ""].map((t) => h("th", {}, t)))),
+        h("thead", {}, h("tr", {}, ["Name", "Contact", "Total jumps", "Tracking jumps", "License / federation", "Disciplines", "Registered", ""].map((t) => h("th", {}, t)))),
         h("tbody", {}, regs.map((r) => h("tr", {},
-          h("td", {}, r.name), h("td", { class: "n" }, r.total_jumps.toLocaleString()), h("td", { class: "n" }, r.tracking_jumps.toLocaleString()),
+          h("td", {}, r.name),
+          h("td", { class: "contact" }, r.email ? h("a", { href: `mailto:${r.email}` }, r.email) : "–",
+            r.phone ? h("div", {}, r.phone) : null,
+            r.whatsapp ? h("div", {}, h("a", { href: `https://wa.me/${r.whatsapp.replace(/\D/g, "")}`, target: "_blank", rel: "noopener noreferrer" },
+              r.whatsapp === r.phone ? "WhatsApp" : `WhatsApp ${r.whatsapp}`)) : null),
+          h("td", { class: "n" }, r.total_jumps.toLocaleString()), h("td", { class: "n" }, r.tracking_jumps.toLocaleString()),
           h("td", {}, r.license), h("td", {}, r.disciplines.map((k) => SHORT[k] || k).join(", ")),
           h("td", {}, new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })),
           h("td", {}, h("button", { class: "icon-btn", type: "button", "aria-label": `Remove ${r.name}`, title: "Remove", onclick: async () => {

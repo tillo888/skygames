@@ -35,15 +35,19 @@ def test_register_validate_and_admin_views(base):
     cid = c["id"]
     visitor = browser()
 
+    who = {"name": "Ana Lopez", "email": "Ana@Example.com", "phone": "+34 600 123 456"}
     bad = [({"name": "A"}, "Name"),
-           ({"name": "Ana Lopez", "total_jumps": "lots"}, "Total jumps"),
-           ({"name": "Ana Lopez", "total_jumps": 100, "tracking_jumps": 200, "license": "ES"}, "Tracking jumps"),
-           ({"name": "Ana Lopez", "total_jumps": 300, "tracking_jumps": 50, "license": "RFAE Spain", "disciplines": ["freestyle"]}, "discipline")]
+           ({"name": "Ana Lopez", "email": "ana@"}, "Email"),
+           ({"name": "Ana Lopez", "email": "ana@example.com", "phone": "12"}, "Phone"),
+           ({**who, "whatsapp": "abc"}, "WhatsApp"),
+           ({**who, "total_jumps": "lots"}, "Total jumps"),
+           ({**who, "total_jumps": 100, "tracking_jumps": 200, "license": "ES"}, "Tracking jumps"),
+           ({**who, "total_jumps": 300, "tracking_jumps": 50, "license": "RFAE Spain", "disciplines": ["freestyle"]}, "discipline")]
     for body, word in bad:
         st, r = _post(base, f"/api/competitions/{cid}/registrations", body, visitor)
         assert st == 400 and word.lower() in r["error"].lower(), (body, r)
 
-    ok = {"name": "Ana Lopez", "total_jumps": 300, "tracking_jumps": 50, "license": "RFAE Spain", "disciplines": ["distance"]}
+    ok = {**who, "whatsapp": "0055 11 91234 5678", "total_jumps": 300, "tracking_jumps": 50, "license": "RFAE Spain", "disciplines": ["distance"]}
     st, r = _post(base, f"/api/competitions/{cid}/registrations", ok, visitor)
     assert st == 201 and r["payment_url"] == "https://pay.example/skygames"
     st, _ = _post(base, f"/api/competitions/{cid}/registrations", {**ok, "name": "=HYPERLINK(1)"}, visitor)
@@ -58,9 +62,10 @@ def test_register_validate_and_admin_views(base):
     st, b, _ = call(base, "GET", f"/api/competitions/{cid}/registrations", who=admin)
     regs = json.loads(b)["registrations"]
     assert [r["name"] for r in regs] == ["Ana Lopez", "=HYPERLINK(1)"] and regs[0]["tracking_jumps"] == 50
+    assert (regs[0]["email"], regs[0]["phone"], regs[0]["whatsapp"]) == ("ana@example.com", "+34600123456", "+5511912345678")
     st, csvb, hd = call(base, "GET", f"/api/competitions/{cid}/registrations.csv", who=admin)
     text = csvb.decode("utf-8-sig")
-    assert st == 200 and "Ana Lopez,300,50,RFAE Spain,distance" in text and "'=HYPERLINK(1)" in text
+    assert st == 200 and "Ana Lopez,ana@example.com,'+34600123456,'+5511912345678,300,50,RFAE Spain,distance" in text and "'=HYPERLINK(1)" in text
 
     # close registration
     st, c2 = _post(base, f"/api/competitions/{cid}", {**c, "registration_open": False}, admin, "PUT")
